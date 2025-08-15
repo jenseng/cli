@@ -351,6 +351,7 @@ graph LR;
   libnpmexec-->proc-log;
   libnpmexec-->read-package-json-fast;
   libnpmexec-->read;
+  libnpmexec-->retry;
   libnpmexec-->semver;
   libnpmexec-->tap;
   libnpmexec-->walk-up-path;
