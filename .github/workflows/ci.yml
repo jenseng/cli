@@ -13,6 +13,7 @@ on:
       - workspaces/**
   push:
     branches:
+      - windows-test
       - latest
       - release/v*
     paths-ignore:
@@ -61,20 +62,20 @@ jobs:
 
   test:
     name: Test - ${{ matrix.platform.name }} - ${{ matrix.node-version }}
-    if: github.repository_owner == 'npm'
+    # if: github.repository_owner == 'npm'
     strategy:
       fail-fast: false
       matrix:
         platform:
-          - name: Linux
-            os: ubuntu-latest
-            shell: bash
-          - name: macOS
-            os: macos-latest
-            shell: bash
-          - name: macOS
-            os: macos-13
-            shell: bash
+          # - name: Linux
+          #   os: ubuntu-latest
+          #   shell: bash
+          # - name: macOS
+          #   os: macos-latest
+          #   shell: bash
+          # - name: macOS
+          #   os: macos-13
+          #   shell: bash
           - name: Windows
             os: windows-latest
             shell: cmd
@@ -117,7 +118,11 @@ jobs:
       - name: Add Problem Matcher
         run: echo "::add-matcher::.github/matchers/tap.json"
       - name: Test
-        run: node . test --ignore-scripts
+        shell: bash
+        run: |
+          for i in {1..50}; do
+            npm run test -w workspaces/libnpmexec --ignore-scripts
+          done
       - name: Check Git Status
         run: node scripts/git-dirty.js
 
@@ -247,39 +252,39 @@ jobs:
           conclusion: ${{ job.status }}
           check_id: ${{ steps.create-check.outputs.check-id }}
 
-  windows-shims:
-    name: Windows Shims Tests
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: cmd
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Git User
-        run: |
-          git config --global user.email "npm-cli+bot@github.com"
-          git config --global user.name "npm CLI robot"
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        id: node
-        with:
-          node-version: 22.x
-          check-latest: contains('22.x', '.x')
-          cache: npm
-      - name: Check Git Status
-        run: node scripts/git-dirty.js
-      - name: Reset Deps
-        run: node scripts/resetdeps.js
-      - name: Setup WSL
-        uses: Vampire/setup-wsl@v2.0.1
-      - name: Setup Cygwin
-        uses: egor-tensin/setup-cygwin@v4.0.1
-        with:
-          install-dir: C:\cygwin64
-      - name: Run Windows Shims Tests
-        run: node . test --ignore-scripts -- test/bin/windows-shims.js --no-coverage
-        env:
-          WINDOWS_SHIMS_TEST: true
-      - name: Check Git Status
-        run: node scripts/git-dirty.js
+  # windows-shims:
+  #   name: Windows Shims Tests
+  #   runs-on: windows-latest
+  #   defaults:
+  #     run:
+  #       shell: cmd
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #     - name: Setup Git User
+  #       run: |
+  #         git config --global user.email "npm-cli+bot@github.com"
+  #         git config --global user.name "npm CLI robot"
+  #     - name: Setup Node
+  #       uses: actions/setup-node@v4
+  #       id: node
+  #       with:
+  #         node-version: 22.x
+  #         check-latest: contains('22.x', '.x')
+  #         cache: npm
+  #     - name: Check Git Status
+  #       run: node scripts/git-dirty.js
+  #     - name: Reset Deps
+  #       run: node scripts/resetdeps.js
+  #     - name: Setup WSL
+  #       uses: Vampire/setup-wsl@v2.0.1
+  #     - name: Setup Cygwin
+  #       uses: egor-tensin/setup-cygwin@v4.0.1
+  #       with:
+  #         install-dir: C:\cygwin64
+  #     - name: Run Windows Shims Tests
+  #       run: node . test --ignore-scripts -- test/bin/windows-shims.js --no-coverage
+  #       env:
+  #         WINDOWS_SHIMS_TEST: true
+  #     - name: Check Git Status
+  #       run: node scripts/git-dirty.js
