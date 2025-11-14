@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const fs = require('node:fs/promises')
 const { rmdirSync } = require('node:fs')
 const promiseRetry = require('promise-retry')
@@ -143,15 +144,23 @@ async function maintainLock (lockPath) {
   // fs.utimes operates on floating points seconds (directly, or via strings/Date objects), which may not match the underlying filesystem's mtime precision, meaning that we might read a slightly different mtime than we write. always round to the nearest second, since all filesystems support at least second precision
   let mtime = Math.round(stats.mtimeMs / 1000)
   const signal = controller.signal
+  let touchCount = 0
 
   async function touchLock () {
+    touchCount++
     try {
+      const currentTouchCount = touchCount
+      const start = Date.now()
+      console.log(`${currentTouchCount} fs.stat start`)
       const currentStats = (await fs.stat(lockPath))
+      console.log(`${currentTouchCount} fs.stat done in ${Date.now() - start}ms`)
       const currentMtime = Math.round(currentStats.mtimeMs / 1000)
       if (currentStats.ino !== stats.ino || currentMtime !== mtime) {
+        console.log(`${currentTouchCount} expected ${mtime}, got ${currentMtime}`)
         throw new Error('Lock compromised')
       }
       mtime = Math.round(Date.now() / 1000)
+      console.log(`${currentTouchCount} mtime=${mtime}`)
       // touch the lock, unless we just released it during this iteration
       if (currentLocks.has(lockPath)) {
         await fs.utimes(lockPath, mtime, mtime)

@@ -249,6 +249,8 @@ const exec = async (opts) => {
       path: installDir,
     })
     const lockPath = join(installDir, 'concurrency.lock')
+    // eslint-disable-next-line no-console
+    console.log('loadActual start')
     const npxTree = await withLock(lockPath, () => npxArb.loadActual())
     await Promise.all(needInstall.map(async ({ spec }) => {
       const { manifest } = await missingFromTree({
@@ -292,6 +294,8 @@ const exec = async (opts) => {
           }
         }
       }
+      // eslint-disable-next-line no-console
+      console.log('reify start')
       await withLock(lockPath, () => npxArb.reify({
         ...flatOptions,
         save: true,
